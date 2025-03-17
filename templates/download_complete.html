@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tải Video Xong</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        /* Các kiểu CSS cơ bản */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7fc;
+            margin: 0;
+            padding: 0;
+        }
+
+        a {
+            text-decoration: none;
+            color: white;
+
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            margin-top: 50px;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        h1 {
+            text-align: center;
+            color: #28a745;
+            animation: slideIn 1s ease-in-out;
+        }
+
+        p {
+            text-align: center;
+            color: #555;
+        }
+
+        .btn-primary {
+            width: 100%;
+            background-color: #4e73df;
+            border: none;
+            padding: 12px;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+            background-color: #2e59d9;
+            transform: scale(1.05);
+        }
+
+        /* Hiệu ứng fade-in */
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* Hiệu ứng slide-in */
+        @keyframes slideIn {
+            0% {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+
+            100% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Tải Video Thành Công!</h1>
+        <p>Video của bạn đã được tải về thành công. Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi!</p>
+        <a href="/" class="btn btn-primary">Tải video khác</a>
+    </div>
+</body>
