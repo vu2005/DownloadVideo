@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -207,7 +206,7 @@
             border-bottom: 1px solid var(--border-color);
             padding: 1rem 1.25rem;
             font-weight: 600;
-            color: var(--text-color);
+            colorstototo: var(--text-color);
             display: flex;
             align-items: center;
         }
@@ -350,7 +349,7 @@
                         <div class="alert alert-{{ category }} alert-dismissible fade show">
                             {{ message }}
                             <button type="button" class="close" data-dismiss="alert">
-                                <span>&times;</span>
+                                <span>×</span>
                             </button>
                         </div>
                     {% endfor %}
@@ -414,6 +413,17 @@
                 
                 <div class="form-group">
                     <label>
+                        <i class="fas fa-image"></i> Tải lên logo (tùy chọn):
+                    </label>
+                    <div class="custom-file mb-3">
+                        <input type="file" class="custom-file-input" id="logo_file" name="logo_file" accept="image/png,image/jpeg,image/jpg">
+                        <label class="custom-file-label" for="logo_file">Chọn file ảnh logo (PNG, JPEG)</label>
+                    </div>
+                    <small class="form-text text-muted">Nếu không chọn, logo mặc định sẽ được sử dụng</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>
                         <i class="fas fa-file-export"></i> Định dạng tải xuống:
                     </label>
                     <div class="format-options">
@@ -449,8 +459,7 @@
                 <div class="post-processing-note">
                     <i class="fas fa-magic"></i> <strong>Xử lý video tự động:</strong> Tất cả video sẽ được tự động xử lý sau khi tải xuống:
                     <ul>
-                        <li>Lật ngang video (từ trái sang phải)</li>
-                        <li>Thêm logo trong 3 giây đầu tiên của video</li>
+                        <li>Thêm logo ở giữa màn hình (tỷ lệ 1:4) từ giây thứ 5 đến giây thứ 10</li>
                     </ul>
                 </div>
                 
@@ -464,7 +473,7 @@
     <footer>
         <div class="container">
             <p class="mb-0">
-                <strong>Công cụ Tải Video Đa Nền Tảng</strong> &copy; 2025 | 
+                <strong>Công cụ Tải Video Đa Nền Tảng</strong> © 2025 | 
                 <span>Tất cả các quyền được bảo lưu</span>
             </p>
         </div>
@@ -477,7 +486,7 @@
             // Hiển thị tên file khi được chọn
             $('.custom-file-input').on('change', function() {
                 var fileName = $(this).val().split('\\').pop();
-                $(this).next('.custom-file-label').html(fileName || 'Chọn file .txt');
+                $(this).next('.custom-file-label').html(fileName || 'Chọn file ' + ($(this).attr('id') === 'url_file' ? '.txt' : 'ảnh logo (PNG, JPEG)'));
             });
             
             // Xử lý chọn định dạng

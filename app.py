@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 import yt_dlp
 import os
@@ -8,251 +7,253 @@ import time
 from datetime import datetime
 import json
 import subprocess
+import validators
+import logging
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
+# Thiết lập logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
 # Lưu trữ trạng thái tải xuống
 download_status = {}
+status_lock = threading.Lock()  # Lock để đảm bảo thread-safe
 
 def download_progress_hook(d):
     """Theo dõi tiến trình tải xuống"""
     download_id = d.get('download_id')
     if download_id is None:
         return
-    
+
+    status_update = {}
     if d['status'] == 'downloading':
         try:
-            percent = d.get('_percent_str', 'N/A')
-            speed = d.get('_speed_str', 'N/A')
-            eta = d.get('_eta_str', 'N/A')
-            
-            download_status[download_id].update({
-                'percent': percent,
-                'speed': speed,
-                'eta': eta,
+            status_update = {
+                'percent': d.get('_percent_str', 'N/A'),
+                'speed': d.get('_speed_str', 'N/A'),
+                'eta': d.get('_eta_str', 'N/A'),
                 'status': 'downloading'
-            })
+            }
         except:
             pass
     elif d['status'] == 'finished':
-        download_status[download_id].update({
-            'status': 'processing',  # Status changed to processing for post-processing
+        status_update = {
+            'status': 'processing',
             'percent': '100%',
             'completed_time': datetime.now().strftime('%H:%M:%S')
-        })
+        }
     elif d['status'] == 'error':
-        download_status[download_id].update({
+        status_update = {
             'status': 'error',
             'error_message': d.get('error', 'Lỗi không xác định')
-        })
+        }
+
+    with status_lock:
+        if download_id in download_status:
+            download_status[download_id].update(status_update)
 
 def post_process_video(input_path, output_path, logo_path):
-    """Post-process video: flip horizontally and overlay logo for first 3 seconds"""
+    """Post-process video: overlay logo for first 5 seconds"""
     try:
-        # Create a temporary file for the flipped video
-        temp_path = input_path + "_temp.mp4"
-        
-        # Flip the video horizontally using FFmpeg
-        flip_cmd = [
-            'ffmpeg', '-i', input_path, '-vf', 'hflip', '-c:a', 'copy', temp_path
-        ]
-        subprocess.run(flip_cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if not os.path.exists(logo_path):
+            raise FileNotFoundError("Logo file not found")
 
-        # Overlay the logo for the first 3 seconds
+        # FFmpeg command để thêm logo trong 5 giây đầu
         overlay_cmd = [
-            'ffmpeg', '-i', temp_path, '-i', logo_path,
-            '-filter_complex', 
-            '[1:v]format=rgba [logo]; [0:v][logo]overlay=10:10:enable=\'between(t,0,3)\'',
-            '-c:a', 'copy', output_path
+            'ffmpeg', '-y',  # Ghi đè file đầu ra nếu tồn tại
+            '-i', input_path,
+            '-i', logo_path,
+            '-filter_complex',
+            '[1:v]format=rgba[logo];[0:v][logo]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)*0.9:enable=\'between(t,5,10)\'',
+            '-c:a', 'copy',
+            output_path
         ]
-        subprocess.run(overlay_cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-        # Clean up temporary file
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
-
+        result = subprocess.run(overlay_cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        logger.info(f"FFmpeg output: {result.stdout}")
         return True
     except subprocess.CalledProcessError as e:
-        raise Exception(f"FFmpeg error: {e.stderr.decode() if e.stderr else str(e)}")
+        logger.error(f"FFmpeg error: {e.stderr}")
+        raise Exception(f"FFmpeg error: {e.stderr}")
     except Exception as e:
+        logger.error(f"Post-processing error: {str(e)}")
         raise Exception(f"Post-processing error: {str(e)}")
 
 def download_video(url, download_path, format_option, download_id):
-    """Tải xuống video và xử lý hậu kỳ (lật video và thêm logo)"""
-    
-    # Thiết lập các tùy chọn dựa trên định dạng được chọn
+    """Tải xuống video và xử lý hậu kỳ"""
+    unique_id = str(uuid.uuid4())  # ID duy nhất để tránh xung đột file
+    temp_file = os.path.join(download_path, f"temp_{unique_id}.%(ext)s")
+    processed_file = os.path.join(download_path, f"processed_{unique_id}.%(ext)s")
+
+    ydl_opts = {
+        'outtmpl': temp_file,
+        'progress_hooks': [download_progress_hook],
+        'download_id': download_id
+    }
+
     if format_option == 'mp3':
-        ydl_opts = {
+        ydl_opts.update({
             'format': 'bestaudio/best',
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
                 'preferredquality': '192',
             }],
-            'outtmpl': os.path.join(download_path, '%(title)s.%(ext)s'),
-            'progress_hooks': [download_progress_hook],
-        }
-    else:  # mp4 hoặc các định dạng khác
-        ydl_opts = {
-            'format': 'bestvideo+bestaudio/best',
-            'postprocessors': [{
-                'key': 'FFmpegVideoConvertor',
-                'preferedformat': format_option,
-            }],
-            'outtmpl': os.path.join(download_path, '%(title)s.%(ext)s'),
-            'progress_hooks': [download_progress_hook],
-        }
-    
-    # Thêm ID tải xuống trực tiếp vào progress_hook
-    ydl_opts['download_id'] = download_id
-    
-    try:
-        # Cập nhật trạng thái bắt đầu
-        download_status[download_id].update({
-            'status': 'starting',
-            'start_time': datetime.now().strftime('%H:%M:%S')
         })
-        
+    else:
+        ydl_opts.update({
+            'format': 'bestvideo+bestaudio/best',
+            'merge_output_format': format_option,
+        })
+
+    try:
+        with status_lock:
+            download_status[download_id].update({
+                'status': 'starting',
+                'start_time': datetime.now().strftime('%H:%M:%S')
+            })
+
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            # Cập nhật thông tin video trước khi tải
             info = ydl.extract_info(url, download=False)
-            title = info.get('title', 'Video không xác định')
+            title = info.get('title', 'Video không xác định').replace('/', '_').replace('\\', '_')  # Sanitize title
             download_status[download_id].update({
                 'title': title,
                 'thumbnail': info.get('thumbnail', '')
             })
-            
-            # Bắt đầu tải xuống
+
             ydl.process_ie_result(info, download=True)
-            
-            # Lấy đường dẫn file đã tải
-            downloaded_file = os.path.join(download_path, f"{title}.{format_option}")
-            
-            # Chỉ xử lý hậu kỳ nếu không phải định dạng mp3
+
+            downloaded_file = temp_file.replace('%(ext)s', format_option)
+            final_file = os.path.join(download_path, f"{title}.{format_option}")
+
             if format_option != 'mp3':
                 logo_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static/logo.png")
-                if not os.path.exists(logo_path):
-                    raise Exception("Logo file not found. Please provide a valid logo path.")
-                
-                # Đường dẫn file đầu ra sau khi xử lý
-                processed_file = os.path.join(download_path, f"{title}_processed.{format_option}")
-                
-                # Xử lý hậu kỳ: lật video và thêm logo
+                processed_file = processed_file.replace('%(ext)s', format_option)
+
                 post_process_video(downloaded_file, processed_file, logo_path)
+
+                # Đổi tên file đã xử lý thành tên cuối cùng
+                if os.path.exists(processed_file):
+                    os.rename(processed_file, final_file)
+                else:
+                    raise Exception("Processed file not found")
                 
-                # Xóa file gốc và đổi tên file đã xử lý thành tên gốc
+                # Xóa file tạm
                 if os.path.exists(downloaded_file):
                     os.remove(downloaded_file)
-                os.rename(processed_file, downloaded_file)
-                
-                # Cập nhật trạng thái hoàn thành
-                download_status[download_id].update({
-                    'status': 'finished',
-                    'completed_processing_time': datetime.now().strftime('%H:%M:%S')
-                })
             else:
-                # For MP3, no post-processing needed
+                # Đối với MP3, chỉ đổi tên file
+                if os.path.exists(downloaded_file):
+                    os.rename(downloaded_file, final_file)
+
+            with status_lock:
                 download_status[download_id].update({
                     'status': 'finished',
                     'completed_processing_time': datetime.now().strftime('%H:%M:%S')
                 })
-            
+
         return True
     except Exception as e:
-        # Cập nhật lỗi
-        download_status[download_id].update({
-            'status': 'error',
-            'error_message': str(e)
-        })
+        logger.error(f"Download error for {url}: {str(e)}")
+        with status_lock:
+            download_status[download_id].update({
+                'status': 'error',
+                'error_message': str(e)
+            })
+        # Cleanup
+        for f in [temp_file.replace('%(ext)s', format_option), processed_file.replace('%(ext)s', format_option)]:
+            if os.path.exists(f):
+                try:
+                    os.remove(f)
+                except:
+                    pass
         return False
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        # Kiểm tra file - bắt buộc phải có file .txt
         if 'url_file' not in request.files or not request.files['url_file'].filename:
-            flash('Vui lòng tải lên file .txt chứa các liên kết video', 'danger')
+            flash('Vui lòng tải lên tệp .txt chứa các liên kết video', 'danger')
             return redirect(url_for('index'))
-            
+
         file = request.files['url_file']
         if not file.filename.endswith('.txt'):
-            flash('Chỉ hỗ trợ file .txt', 'danger')
+            flash('Chỉ hỗ trợ tệp .txt', 'danger')
             return redirect(url_for('index'))
-        
-        # Đọc urls từ file txt
-        file_content = file.read().decode('utf-8')
-        video_urls = [url.strip() for url in file_content.split('\n') if url.strip()]
-        
+
+        file_content = file.read().decode('utf-8', errors='ignore')
+        video_urls = [url.strip() for url in file_content.split('\n') if url.strip() and validators.url(url.strip())]
+
         if not video_urls:
-            flash('File không chứa liên kết nào. Vui lòng kiểm tra lại.', 'danger')
+            flash('Tệp không chứa liên kết hợp lệ. Vui lòng kiểm tra lại.', 'danger')
             return redirect(url_for('index'))
-        
-        format_option = request.form['format']
-        download_path = request.form['download_path']
-        
-        # Kiểm tra đường dẫn tải xuống
-        if not download_path:
-            download_path = os.path.join(os.path.expanduser('~'), 'Downloads')
-        
-        # Đảm bảo thư mục tải xuống tồn tại
+
+        format_option = request.form.get('format', 'mp4')
+        download_path = request.form.get('download_path', os.path.join(os.path.expanduser('~'), 'Downloads'))
+
         if not os.path.exists(download_path):
             try:
                 os.makedirs(download_path)
-            except:
-                flash(f'Không thể tạo thư mục {download_path}. Vui lòng chọn thư mục khác.', 'danger')
+            except Exception as e:
+                flash(f'Không thể tạo thư mục {download_path}: {str(e)}', 'danger')
                 return redirect(url_for('index'))
-        
-        # Lưu thông tin tải xuống vào session
+
+        logo_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static/logo.png")
+        if format_option != 'mp3' and not os.path.exists(logo_path):
+            flash('Tệp logo không tồn tại trong thư mục static.', 'danger')
+            return redirect(url_for('index'))
+
         download_ids = []
         for url in video_urls:
             download_id = str(uuid.uuid4())
-            download_status[download_id] = {
-                'url': url,
-                'format': format_option,
-                'download_path': download_path,
-                'status': 'queued',
-                'percent': '0%',
-                'speed': 'N/A',
-                'eta': 'N/A',
-                'title': 'Đang xử lý...',
-                'thumbnail': '',
-                'queued_time': datetime.now().strftime('%H:%M:%S')
-            }
+            with status_lock:
+                download_status[download_id] = {
+                    'url': url,
+                    'format': format_option,
+                    'download_path': download_path,
+                    'status': 'queued',
+                    'percent': '0%',
+                    'speed': 'N/A',
+                    'eta': 'N/A',
+                    'title': 'Đang xử lý...',
+                    'thumbnail': '',
+                    'queued_time': datetime.now().strftime('%H:%M:%S')
+                }
             download_ids.append(download_id)
-            
-            # Tải xuống trong một luồng riêng biệt
+
             thread = threading.Thread(
-                target=download_video, 
+                target=download_video,
                 args=(url, download_path, format_option, download_id)
             )
             thread.daemon = True
             thread.start()
-        
-        # Lưu IDs vào session
+
         session['download_ids'] = download_ids
-        
         return redirect(url_for('download_status_page'))
-    
+
     return render_template('index.html')
 
 @app.route('/download_status')
 def download_status_page():
-    """Trang hiển thị trạng thái tải xuống"""
     download_ids = session.get('download_ids', [])
     return render_template('download_status.html', download_ids=download_ids, download_status=download_status)
 
+@app.route('/js/download_status.js')
+def download_status_js():
+    with open('static/js/download_status.js', 'r') as f:
+        return f.read(), 200, {'Content-Type': 'application/javascript'}
+
 @app.route('/check_status')
 def check_status():
-    """API để kiểm tra trạng thái tải xuống"""
     download_ids = session.get('download_ids', [])
-    status_data = {id: download_status.get(id, {}) for id in download_ids}
+    with status_lock:
+        status_data = {id: download_status.get(id, {}) for id in download_ids}
     return json.dumps(status_data)
 
 @app.route('/download_complete')
 def download_complete():
-    """Trang hoàn tất tải xuống"""
     return render_template('download_complete.html')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5000)
