@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 import yt_dlp
 import os
@@ -146,6 +147,12 @@ def download_video(url, download_path, format_option, download_id):
                 os.rename(processed_file, downloaded_file)
                 
                 # Cập nhật trạng thái hoàn thành
+                download_status[download_id].update({
+                    'status': 'finished',
+                    'completed_processing_time': datetime.now().strftime('%H:%M:%S')
+                })
+            else:
+                # For MP3, no post-processing needed
                 download_status[download_id].update({
                     'status': 'finished',
                     'completed_processing_time': datetime.now().strftime('%H:%M:%S')

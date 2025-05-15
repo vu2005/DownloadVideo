@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -327,6 +328,15 @@
                 flex-wrap: wrap;
             }
         }
+
+        .post-processing-note {
+            background-color: #e8f4ff;
+            border-left: 4px solid var(--primary-color);
+            padding: 12px;
+            margin-top: 20px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 <body>
@@ -396,21 +406,10 @@
                         <i class="fas fa-cloud-upload-alt"></i> Tải lên file .txt chứa liên kết:
                     </label>
                     <div class="custom-file mb-3">
-                        <input type="file" class="custom-file-input" id="url_file" name="url_file" accept=".txt">
+                        <input type="file" class="custom-file-input" id="url_file" name="url_file" accept=".txt" required>
                         <label class="custom-file-label" for="url_file">Chọn file .txt</label>
                     </div>
                     <small class="form-text text-muted">File .txt với mỗi liên kết trên một dòng</small>
-                </div>
-                
-                <div class="form-group">
-                    <label for="urls">
-                        <i class="fas fa-link"></i> Hoặc nhập liên kết trực tiếp:
-                    </label>
-                    <textarea class="form-control" id="urls" name="urls" rows="3" 
-                        placeholder="Nhập một hoặc nhiều liên kết, mỗi liên kết một dòng:
-https://www.youtube.com/watch?v=example1
-https://www.facebook.com/watch/?v=example2"></textarea>
-                    <small class="form-text text-muted">Tùy chọn: Nếu không tải file .txt, bạn có thể nhập liên kết ở đây</small>
                 </div>
                 
                 <div class="form-group">
@@ -447,6 +446,14 @@ https://www.facebook.com/watch/?v=example2"></textarea>
                     <small class="form-text text-muted">Ví dụ: D:\Videos hoặc /home/user/videos</small>
                 </div>
                 
+                <div class="post-processing-note">
+                    <i class="fas fa-magic"></i> <strong>Xử lý video tự động:</strong> Tất cả video sẽ được tự động xử lý sau khi tải xuống:
+                    <ul>
+                        <li>Lật ngang video (từ trái sang phải)</li>
+                        <li>Thêm logo trong 3 giây đầu tiên của video</li>
+                    </ul>
+                </div>
+                
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-download mr-2"></i> Tải video
                 </button>
@@ -471,13 +478,6 @@ https://www.facebook.com/watch/?v=example2"></textarea>
             $('.custom-file-input').on('change', function() {
                 var fileName = $(this).val().split('\\').pop();
                 $(this).next('.custom-file-label').html(fileName || 'Chọn file .txt');
-                
-                // Nếu đã chọn file, ẩn textarea nhập link
-                if (fileName) {
-                    $('#urls').prop('disabled', true).css('opacity', '0.5');
-                } else {
-                    $('#urls').prop('disabled', false).css('opacity', '1');
-                }
             });
             
             // Xử lý chọn định dạng
@@ -501,11 +501,10 @@ https://www.facebook.com/watch/?v=example2"></textarea>
             // Kiểm tra hợp lệ trước khi gửi form
             $('form').on('submit', function(e) {
                 var urlFile = $('#url_file').val();
-                var urlsText = $('#urls').val();
                 
-                if (!urlFile && !urlsText) {
+                if (!urlFile) {
                     e.preventDefault();
-                    alert('Vui lòng tải lên file .txt hoặc nhập ít nhất một liên kết');
+                    alert('Vui lòng tải lên file .txt chứa các liên kết video');
                     return false;
                 }
                 
@@ -513,45 +512,6 @@ https://www.facebook.com/watch/?v=example2"></textarea>
                 $('.btn-primary').html('<i class="fas fa-spinner fa-spin mr-2"></i> Đang xử lý...');
             });
         });
-        
-        // Hàm mô phỏng để hiển thị hiệu ứng lật từ trái sang phải khi có video tải về
-        function createDownloadItem(title, thumbnail, format) {
-            var downloadCard = $('<div class="card mb-3 download-card"></div>');
-            var cardBody = $('<div class="card-body"></div>');
-            
-            cardBody.html(`
-                <div class="d-flex">
-                    <div class="mr-3">
-                        <i class="fas fa-${format === 'mp3' ? 'music' : 'video'} fa-2x text-primary"></i>
-                    </div>
-                    <div class="flex-grow-1">
-                        <h5>${title}</h5>
-                        <div class="download-progress">
-                            <div class="download-progress-bar" style="width:0%"></div>
-                        </div>
-                        <small class="text-muted mt-2 d-block">Đang tải xuống... <span class="download-percent">0%</span></small>
-                    </div>
-                </div>
-            `);
-            
-            downloadCard.append(cardBody);
-            $('#download-list').prepend(downloadCard);
-            
-            // Mô phỏng tiến trình tải xuống
-            var progress = 0;
-            var interval = setInterval(function() {
-                progress += Math.floor(Math.random() * 10);
-                if (progress > 100) progress = 100;
-                
-                downloadCard.find('.download-progress-bar').css('width', progress + '%');
-                downloadCard.find('.download-percent').text(progress + '%');
-                
-                if (progress === 100) {
-                    clearInterval(interval);
-                    downloadCard.find('small').html('<i class="fas fa-check-circle text-success"></i> Tải xuống hoàn tất');
-                }
-            }, 500);
-        }
     </script>
 </body>
 </html>
