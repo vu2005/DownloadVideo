@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tải Video Thành Công</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        /* Các kiểu CSS cơ bản */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7fc;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 40px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            animation: scaleIn 0.5s ease-in-out;
+        }
+
+        h1 {
+            color: #28a745;
+            margin-bottom: 30px;
+            animation: slideIn 1s ease-in-out;
+        }
+
+        .success-icon {
+            font-size: 72px;
+            color: #28a745;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        p {
+            color: #555;
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        .btn {
+            padding: 12px;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .btn i {
+            margin-right: 8px;
+        }
+
+        .btn-primary {
+            background-color: #4e73df;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: #2e59d9;
+            transform: translateY(-3px);
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            border: none;
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+            transform: translateY(-3px);
+        }
+
+        footer {
+            margin-top: 40px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* Hiệu ứng */
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideIn {
+            0% {
+                transform: translateY(-30px);
+                opacity: 0;
+            }
+
+            100% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes scaleIn {
+            0% {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    {% extends "base.html" %}
+
+    {% block content %}
+    <div class="container">
+        <h2 class="text-center mb-4"><i class="fas fa-spinner fa-spin"></i> Theo dõi trạng thái tải xuống</h2>
+
+        <div id="download-container">
+            {% for id in download_ids %}
+            {% set status = download_status[id] %}
+            <div class="card mb-3 download-card" id="card-{{ id }}">
+                <div class="card-body">
+                    <div class="d-flex">
+                        <div class="mr-3">
+                            {% if status.format == 'mp3' %}
+                            <i class="fas fa-music fa-2x text-primary"></i>
+                            {% else %}
+                            <i class="fas fa-video fa-2x text-primary"></i>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="card-title">{{ status.title }}</h5>
+                            <p class="card-text small text-muted">{{ status.url }}</p>
+                            <div class="download-progress">
+                                <div class="download-progress-bar" style="width: {{ status.percent|replace('%','') }}%">
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <small class="text-muted status-text" id="status-{{ id }}">
+                                    {% if status.status == 'queued' %}
+                                    <i class="fas fa-clock"></i> Đang chờ...
+                                    {% elif status.status == 'starting' %}
+                                    <i class="fas fa-spinner fa-spin"></i> Đang bắt đầu...
+                                    {% elif status.status == 'downloading' %}
+                                    <i class="fas fa-download"></i> Đang tải xuống: {{ status.percent }} ({{
+                                    status.speed }})
+                                    {% elif status.status == 'finished' %}
+                                    <i class="fas fa-check-circle text-success"></i> Tải xuống hoàn tất lúc {{
+                                    status.completed_time }}
+                                    {% elif status.status == 'error' %}
+                                    <i class="fas fa-exclamation-circle text-danger"></i> Lỗi: {{ status.error_message
+                                    }}
+                                    {% endif %}
+                                </small>
+                                <span class="badge badge-primary">{{ status.format|upper }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="/" class="btn btn-outline-primary">
+                <i class="fas fa-plus-circle"></i> Tải video khác
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Kiểm tra trạng thái tải xuống mỗi 2 giây
+        function checkStatus() {
+            $.ajax({
+                url: '/check_status',
+                success: function (data) {
+                    var statuses = JSON.parse(data);
+
+                    // Cập nhật thông tin tải xuống
+                    for (var id in statuses) {
+                        var status = statuses[id];
+                        var card = $('#card-' + id);
+
+                        // Cập nhật tiêu đề
+                        if (status.title && status.title !== 'Đang xử lý...') {
+                            card.find('.card-title').text(status.title);
+                        }
+
+                        // Cập nhật thanh tiến trình
+                        var percentValue = status.percent.replace('%', '');
+                        card.find('.download-progress-bar').css('width', percentValue + '%');
+
+                        // Cập nhật thông tin trạng thái
+                        var statusText = $('#status-' + id);
+                        if (status.status === 'queued') {
+                            statusText.html('<i class="fas fa-clock"></i> Đang chờ...');
+                        } else if (status.status === 'starting') {
+                            statusText.html('<i class="fas fa-spinner fa-spin"></i> Đang bắt đầu...');
+                        } else if (status.status === 'downloading') {
+                            statusText.html('<i class="fas fa-download"></i> Đang tải xuống: ' + status.percent + ' (' + status.speed + ')');
+                        } else if (status.status === 'finished') {
+                            statusText.html('<i class="fas fa-check-circle text-success"></i> Tải xuống hoàn tất lúc ' + status.completed_time);
+                        } else if (status.status === 'error') {
+                            statusText.html('<i class="fas fa-exclamation-circle text-danger"></i> Lỗi: ' + status.error_message);
+                        }
+
+                        // Áp dụng hiệu ứng lật từ trái sang phải khi hoàn tất
+                        if (status.status === 'finished' && !card.hasClass('finished')) {
+                            card.addClass('finished');
+                            // Tạm thời ẩn card
+                            card.fadeOut(300, function () {
+                                // Thêm class mới và hiển thị lại với hiệu ứng lật
+                                $(this).removeClass('download-card').addClass('download-card-finished');
+                                $(this).fadeIn(300);
+                            });
+                        }
+                    }
+                },
+                complete: function () {
+                    // Kiểm tra lại sau 2 giây
+                    setTimeout(checkStatus, 2000);
+                }
+            });
+        }
+
+        // Bắt đầu kiểm tra khi trang được tải
+        $(document).ready(function () {
+            // Thêm hiệu ứng lật cho card khi tải trang
+            $('.download-card').each(function (index) {
+                var card = $(this);
+                setTimeout(function () {
+                    card.css('animation-delay', (index * 0.2) + 's');
+                    card.css('opacity', '1');
+                }, 100 * index);
+            });
+
+            // Bắt đầu kiểm tra trạng thái
+            checkStatus();
+        });
+    </script>
+    {% endblock %}
+
+    <footer>
+        <p>Công cụ Tải Video Đa Nền Tảng &copy; 2025</p>
+    </footer>
+</body>
+
+</html>

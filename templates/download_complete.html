@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tải Video Xong</title>
+    <title>Tải Video Thành Công</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <style>
         /* Các kiểu CSS cơ bản */
         body {
@@ -13,79 +13,134 @@
             background-color: #f4f7fc;
             margin: 0;
             padding: 0;
-        }
-
-        a {
-            text-decoration: none;
-            color: white;
-
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
 
         .container {
             background-color: white;
             border-radius: 10px;
-            padding: 30px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-            margin-top: 50px;
-            animation: fadeIn 1s ease-in-out;
+            padding: 40px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            animation: scaleIn 0.5s ease-in-out;
         }
 
         h1 {
-            text-align: center;
             color: #28a745;
+            margin-bottom: 30px;
             animation: slideIn 1s ease-in-out;
         }
 
-        p {
-            text-align: center;
-            color: #555;
+        .success-icon {
+            font-size: 72px;
+            color: #28a745;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
         }
 
-        .btn-primary {
+        p {
+            color: #555;
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
             width: 100%;
-            background-color: #4e73df;
-            border: none;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        .btn {
             padding: 12px;
             border-radius: 5px;
             font-size: 16px;
             transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .btn i {
+            margin-right: 8px;
+        }
+
+        .btn-primary {
+            background-color: #4e73df;
+            border: none;
         }
 
         .btn-primary:hover {
             background-color: #2e59d9;
-            transform: scale(1.05);
+            transform: translateY(-3px);
         }
 
-        /* Hiệu ứng fade-in */
+        .btn-success {
+            background-color: #28a745;
+            border: none;
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+            transform: translateY(-3px);
+        }
+
+        footer {
+            margin-top: 40px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* Hiệu ứng */
         @keyframes fadeIn {
-            0% {
-                opacity: 0;
-            }
-
-            100% {
-                opacity: 1;
-            }
+            0% { opacity: 0; }
+            100% { opacity: 1; }
         }
 
-        /* Hiệu ứng slide-in */
         @keyframes slideIn {
-            0% {
-                transform: translateX(-100%);
-                opacity: 0;
-            }
+            0% { transform: translateY(-30px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
 
-            100% {
-                transform: translateX(0);
-                opacity: 1;
-            }
+        @keyframes scaleIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
         }
     </style>
 </head>
-
 <body>
     <div class="container">
+        <i class="fas fa-check-circle success-icon"></i>
         <h1>Tải Video Thành Công!</h1>
-        <p>Video của bạn đã được tải về thành công. Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi!</p>
-        <a href="/" class="btn btn-primary">Tải video khác</a>
+        <p>Tất cả video của bạn đã được tải xuống thành công vào thư mục bạn đã chọn!</p>
+        
+        <div class="btn-group">
+            <a href="/" class="btn btn-primary">
+                <i class="fas fa-download"></i> Tải video khác
+            </a>
+            <a href="/download_status" class="btn btn-success">
+                <i class="fas fa-list"></i> Xem trạng thái tải xuống
+            </a>
+        </div>
     </div>
+    
+    <footer>
+        <p>Công cụ Tải Video Đa Nền Tảng &copy; 2025</p>
+    </footer>
 </body>
+</html>

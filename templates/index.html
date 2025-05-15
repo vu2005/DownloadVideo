@@ -1,115 +1,557 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tải Video</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>Tải Video Đa Nền Tảng</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        /* Các kiểu CSS cơ bản */
+        :root {
+            --primary-color: #4361ee;
+            --primary-hover: #3a56d4;
+            --secondary-color: #f8f9fa;
+            --text-color: #2b2d42;
+            --light-text: #6c757d;
+            --border-color: #e9ecef;
+            --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+        }
+
         body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f4f7fc;
+            font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+            background-color: #f8f9fc;
+            color: var(--text-color);
             margin: 0;
             padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-container {
+            flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            padding: 2.5rem 1rem;
         }
 
         .container {
             background-color: white;
-            border-radius: 10px;
-            padding: 40px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            padding: 2.5rem;
+            box-shadow: var(--card-shadow);
             width: 100%;
-            max-width: 500px;
-            animation: fadeIn 1s ease-in-out;
+            max-width: 800px;
+            animation: fadeIn 0.8s ease-out;
         }
 
         h1 {
-            color: #4e73df;
-            margin-bottom: 30px;
-            font-size: 28px;
-            animation: slideIn 1s ease-in-out;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+            font-size: 2rem;
+            text-align: center;
+            position: relative;
+            padding-bottom: 1rem;
+        }
+
+        h1:after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background-color: var(--primary-color);
+            border-radius: 3px;
         }
 
         .form-group label {
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: #333;
+            font-weight: 600;
+            margin-bottom: 0.6rem;
+            color: var(--text-color);
+            font-size: 0.95rem;
         }
 
         .form-control {
-            border-radius: 5px;
-            padding: 15px;
-            border: 1px solid #ccc;
-            font-size: 16px;
+            border-radius: 8px;
+            padding: 0.8rem 1rem;
+            border: 1px solid var(--border-color);
+            font-size: 1rem;
+            transition: var(--transition);
+            box-shadow: none;
         }
 
         .form-control:focus {
-            border-color: #4e73df;
-            box-shadow: 0 0 5px rgba(78, 115, 223, 0.5);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.25);
+        }
+
+        textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
         }
 
         .btn-primary {
-            margin: 20px 0;
-            background-color: #4e73df;
+            background-color: var(--primary-color);
             border: none;
-            padding: 14px;
+            padding: 0.8rem 1.5rem;
             width: 100%;
-            text-align:     center;
-            border-radius: 5px;
+            text-align: center;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 18px;
+            font-size: 1.1rem;
+            font-weight: 600;
             color: white;
-            transition: all 0.3s;
+            transition: var(--transition);
+            box-shadow: 0 4px 6px rgba(67, 97, 238, 0.2);
+            margin-top: 1.5rem;
         }
 
         .btn-primary:hover {
-            background-color: #2e59d9;
-            transform: scale(1.05);
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(67, 97, 238, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
         }
 
         .btn-primary:focus {
             outline: none;
-            box-shadow: 0 0 5px rgba(78, 115, 223, 0.5);
+            box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.4);
         }
 
-        /* Hiệu ứng fade-in */
+        .format-options {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .format-option {
+            flex: 1;
+            min-width: 120px;
+            text-align: center;
+            padding: 0.8rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .format-option i {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--light-text);
+            transition: var(--transition);
+        }
+
+        .format-option:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--primary-color);
+        }
+
+        .format-option:hover i {
+            color: var(--primary-color);
+        }
+
+        .format-option.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            transform: scale(1.02);
+        }
+
+        .format-option.active i {
+            color: white;
+        }
+
+        .alert {
+            margin-bottom: 1.5rem;
+            animation: fadeIn 0.5s ease-in-out;
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            background-color: white;
+            color: var(--light-text);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .card {
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            border: none;
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+        }
+
+        .card-header {
+            background-color: var(--secondary-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 1.25rem;
+            font-weight: 600;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+        }
+
+        .card-header i {
+            margin-right: 0.5rem;
+            color: var(--primary-color);
+        }
+
+        .card-body {
+            padding: 1.25rem;
+        }
+
+        .supported-sites {
+            text-align: center;
+        }
+
+        .supported-sites p {
+            margin-bottom: 1rem;
+            color: var(--text-color);
+        }
+
+        .supported-sites-grid {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .site-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: var(--transition);
+        }
+
+        .site-icon i {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            transition: var(--transition);
+        }
+
+        .site-icon span {
+            font-size: 0.8rem;
+            color: var(--light-text);
+        }
+
+        .site-icon:hover i {
+            transform: scale(1.2);
+        }
+
+        /* Optional dark mode support for future */
+        @keyframes flipInFromLeft {
+            0% { 
+                transform: perspective(400px) rotateY(-90deg);
+                opacity: 0;
+            }
+            100% { 
+                transform: perspective(400px) rotateY(0deg);
+                opacity: 1;
+            }
+        }
+        
+        .download-card {
+            animation: flipInFromLeft 0.8s ease-out forwards;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+        
+        .download-progress {
+            height: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            background-color: #e9ecef;
+            overflow: hidden;
+        }
+        
+        .download-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), #4895ef);
+            border-radius: 5px;
+            transition: width 0.3s ease;
+        }
+        
+        .file-upload-wrapper {
+            position: relative;
+            cursor: pointer;
+        }
+
+        /* Animations */
         @keyframes fadeIn {
-            0% {
-                opacity: 0;
-            }
-            100% {
-                opacity: 1;
-            }
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
         }
 
-        /* Hiệu ứng slide-in */
-        @keyframes slideIn {
-            0% {
-                transform: translateX(-100%);
-                opacity: 0;
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 1rem;
             }
-            100% {
-                transform: translateX(0);
-                opacity: 1;
+            
+            .container {
+                padding: 1.5rem;
+            }
+            
+            h1 {
+                font-size: 1.6rem;
+            }
+            
+            .format-option {
+                min-width: 100px;
+                padding: 0.6rem;
+            }
+            
+            .format-options {
+                flex-wrap: wrap;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Tải Video</h1>
-        <form action="/" method="POST">
-            <div class="form-group">
-                <label for="url">Nhập liên kết video:</label>
-                <input type="text" class="form-control" id="url" name="url" required>
+    <div class="main-container">
+        <div class="container">
+            <h1>Tải Video Đa Nền Tảng</h1>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show">
+                            {{ message }}
+                            <button type="button" class="close" data-dismiss="alert">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-info-circle"></i> Hỗ trợ nhiều nền tảng
+                </div>
+                <div class="card-body">
+                    <div class="supported-sites">
+                        <p>Công cụ này hỗ trợ tải video từ nhiều nền tảng phổ biến:</p>
+                        <div class="supported-sites-grid">
+                            <div class="site-icon">
+                                <i class="fab fa-youtube"></i>
+                                <span>YouTube</span>
+                            </div>
+                            <div class="site-icon">
+                                <i class="fab fa-facebook"></i>
+                                <span>Facebook</span>
+                            </div>
+                            <div class="site-icon">
+                                <i class="fab fa-twitter"></i>
+                                <span>Twitter</span>
+                            </div>
+                            <div class="site-icon">
+                                <i class="fab fa-instagram"></i>
+                                <span>Instagram</span>
+                            </div>
+                            <div class="site-icon">
+                                <i class="fab fa-tiktok"></i>
+                                <span>TikTok</span>
+                            </div>
+                            <div class="site-icon">
+                                <i class="fab fa-vimeo"></i>
+                                <span>Vimeo</span>
+                            </div>
+                            <div class="site-icon">
+                                <i class="fas fa-play-circle"></i>
+                                <span>Khác</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <button type="submit" class="btn btn-primary">Tải video</button>
-        </form>
+            
+            <div id="download-list"></div>
+            
+            <form action="/" method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-cloud-upload-alt"></i> Tải lên file .txt chứa liên kết:
+                    </label>
+                    <div class="custom-file mb-3">
+                        <input type="file" class="custom-file-input" id="url_file" name="url_file" accept=".txt">
+                        <label class="custom-file-label" for="url_file">Chọn file .txt</label>
+                    </div>
+                    <small class="form-text text-muted">File .txt với mỗi liên kết trên một dòng</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="urls">
+                        <i class="fas fa-link"></i> Hoặc nhập liên kết trực tiếp:
+                    </label>
+                    <textarea class="form-control" id="urls" name="urls" rows="3" 
+                        placeholder="Nhập một hoặc nhiều liên kết, mỗi liên kết một dòng:
+https://www.youtube.com/watch?v=example1
+https://www.facebook.com/watch/?v=example2"></textarea>
+                    <small class="form-text text-muted">Tùy chọn: Nếu không tải file .txt, bạn có thể nhập liên kết ở đây</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-file-export"></i> Định dạng tải xuống:
+                    </label>
+                    <div class="format-options">
+                        <div class="format-option active" data-format="mp4">
+                            <i class="fas fa-film"></i>
+                            <span>MP4</span>
+                        </div>
+                        <div class="format-option" data-format="mp3">
+                            <i class="fas fa-music"></i>
+                            <span>MP3</span>
+                        </div>
+                        <div class="format-option" data-format="webm">
+                            <i class="fas fa-video"></i>
+                            <span>WEBM</span>
+                        </div>
+                        <div class="format-option" data-format="mkv">
+                            <i class="fas fa-file-video"></i>
+                            <span>MKV</span>
+                        </div>
+                    </div>
+                    <input type="hidden" name="format" id="format-input" value="mp4">
+                </div>
+                
+                <div class="form-group">
+                    <label for="download_path">
+                        <i class="fas fa-folder-open"></i> Đường dẫn lưu tệp:
+                    </label>
+                    <input type="text" class="form-control" id="download_path" name="download_path" 
+                           placeholder="Để trống để sử dụng thư mục Downloads mặc định">
+                    <small class="form-text text-muted">Ví dụ: D:\Videos hoặc /home/user/videos</small>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-download mr-2"></i> Tải video
+                </button>
+            </form>
+        </div>
     </div>
+    
+    <footer>
+        <div class="container">
+            <p class="mb-0">
+                <strong>Công cụ Tải Video Đa Nền Tảng</strong> &copy; 2025 | 
+                <span>Tất cả các quyền được bảo lưu</span>
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Hiển thị tên file khi được chọn
+            $('.custom-file-input').on('change', function() {
+                var fileName = $(this).val().split('\\').pop();
+                $(this).next('.custom-file-label').html(fileName || 'Chọn file .txt');
+                
+                // Nếu đã chọn file, ẩn textarea nhập link
+                if (fileName) {
+                    $('#urls').prop('disabled', true).css('opacity', '0.5');
+                } else {
+                    $('#urls').prop('disabled', false).css('opacity', '1');
+                }
+            });
+            
+            // Xử lý chọn định dạng
+            $('.format-option').click(function() {
+                $('.format-option').removeClass('active');
+                $(this).addClass('active');
+                $('#format-input').val($(this).data('format'));
+            });
+            
+            // Hiệu ứng hover cho các nút
+            $('.btn').hover(
+                function() { $(this).addClass('btn-hover'); },
+                function() { $(this).removeClass('btn-hover'); }
+            );
+            
+            // Tự động đóng cảnh báo sau 5 giây
+            setTimeout(function() {
+                $('.alert').alert('close');
+            }, 5000);
+            
+            // Kiểm tra hợp lệ trước khi gửi form
+            $('form').on('submit', function(e) {
+                var urlFile = $('#url_file').val();
+                var urlsText = $('#urls').val();
+                
+                if (!urlFile && !urlsText) {
+                    e.preventDefault();
+                    alert('Vui lòng tải lên file .txt hoặc nhập ít nhất một liên kết');
+                    return false;
+                }
+                
+                // Hiệu ứng nút tải khi submit
+                $('.btn-primary').html('<i class="fas fa-spinner fa-spin mr-2"></i> Đang xử lý...');
+            });
+        });
+        
+        // Hàm mô phỏng để hiển thị hiệu ứng lật từ trái sang phải khi có video tải về
+        function createDownloadItem(title, thumbnail, format) {
+            var downloadCard = $('<div class="card mb-3 download-card"></div>');
+            var cardBody = $('<div class="card-body"></div>');
+            
+            cardBody.html(`
+                <div class="d-flex">
+                    <div class="mr-3">
+                        <i class="fas fa-${format === 'mp3' ? 'music' : 'video'} fa-2x text-primary"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h5>${title}</h5>
+                        <div class="download-progress">
+                            <div class="download-progress-bar" style="width:0%"></div>
+                        </div>
+                        <small class="text-muted mt-2 d-block">Đang tải xuống... <span class="download-percent">0%</span></small>
+                    </div>
+                </div>
+            `);
+            
+            downloadCard.append(cardBody);
+            $('#download-list').prepend(downloadCard);
+            
+            // Mô phỏng tiến trình tải xuống
+            var progress = 0;
+            var interval = setInterval(function() {
+                progress += Math.floor(Math.random() * 10);
+                if (progress > 100) progress = 100;
+                
+                downloadCard.find('.download-progress-bar').css('width', progress + '%');
+                downloadCard.find('.download-percent').text(progress + '%');
+                
+                if (progress === 100) {
+                    clearInterval(interval);
+                    downloadCard.find('small').html('<i class="fas fa-check-circle text-success"></i> Tải xuống hoàn tất');
+                }
+            }, 500);
+        }
+    </script>
 </body>
 </html>
